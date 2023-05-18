@@ -1,0 +1,53 @@
+do {
+int instr = ((pc==ADDR_TEXT)?(0):(pc - ADDR_TEXT)/4);
+int opcode = instr >> 26;
+int shamt = (instr >> 6) & 0x1f;
+int funct = instr & 0x3f;
+int imm = instr & 0xffff;
+int target = instr & 0x3ffffff;
+if (opcode == 0x00) {
+if (funct == 0x00) {
+registers[(instr >> 11) & 0x1f] = registers[(instr >> 16) & 0x1f] << shamt;
+pc = pc + 4;
+} else if (funct == 0x02) {
+registers[(instr >> 11) & 0x1f] = registers[(instr >> 16) & 0x1f] >> shamt;
+pc = pc + 4;
+} else if (funct == 0x20) {
+registers[(instr >> 11) & 0x1f] = registers[(instr >> 21) & 0x1f] + registers[(instr >> 16) & 0x1f];
+pc = pc + 4;
+} else {
+printf("%08x", instr);
+break;
+}
+} else if (opcode == 0x05) {
+if (registers[(instr >> 21) & 0x1f] != registers[(instr >> 16) & 0x1f]) {
+pc += (imm << 2) + 4;
+}
+else {
+pc = pc + 4;
+}
+} else if (opcode == 0x08) {
+registers[(instr >> 16) & 0x1f] = registers[(instr >> 21) & 0x1f] + imm;
+pc = pc + 4;
+} else if (opcode == 0x0c) {
+registers[(instr >> 16) & 0x1f] = registers[(instr >> 21) & 0x1f] & imm;
+pc = pc + 4;
+} else if (opcode == 0x0f) {
+registers[(instr >> 16) & 0x1f] = imm << 16;
+pc = pc + 4;
+} else if (opcode == 0x23) {
+registers[(instr >> 16) & 0x1f] = data[(registers[(instr >> 21) & 0x1f] + imm - ADDR_DATA) / 4];
+pc = pc + 4;
+} else if (opcode == 0x2b) {
+data[(registers[(instr >> 21) & 0x1f] + imm - ADDR_DATA) / 4] = registers[(instr >> 16) & 0x1f];
+pc = pc + 4;
+} else if (opcode == 0){
+break;
+} else if (opcode == 0x25) {
+registers[(instr >> 16) & 0x1f] = (unsigned short)data[(registers[(instr >> 21) & 0x1f] + imm - ADDR_DATA) / 4];
+pc = pc + 4;
+} else if (opcode == 0x29) {
+data[(registers[(instr >> 21) & 0x1f] + imm - ADDR_DATA) / 4] = (unsigned short)registers[(instr >> 16) & 0x1f];
+pc = pc + 4;
+}
+} while (1);
